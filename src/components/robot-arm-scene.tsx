@@ -74,6 +74,7 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     const wristJoint = MeshBuilder.CreateSphere("wrist", { diameter: 0.5 }, scene);
     wristJoint.parent = forearm;
     wristJoint.position.y = 1; // Position at the end of the forearm
+    wristJoint.rotation.y = Math.PI / 2; // Rotate 90 degrees for horizontal grip
 
     // Gripper (Pincers)
     const gripperFinger1 = MeshBuilder.CreateBox("finger1", { width: 0.1, height: 0.6, depth: 0.1 }, scene);
