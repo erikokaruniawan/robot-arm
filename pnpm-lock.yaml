@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@babylonjs/core':
+        specifier: ^8.38.0
+        version: 8.38.0
+      '@babylonjs/loaders':
+        specifier: ^8.38.0
+        version: 8.38.0(@babylonjs/core@8.38.0)(babylonjs-gltf2interface@8.38.0)
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.0.1(react-hook-form@7.56.4(react@19.1.0))
@@ -198,6 +204,15 @@ packages:
   '@babel/types@7.27.6':
     resolution: {integrity: sha512-ETyHEk2VHHvl9b9jZP5IHPavHYk57EhanlRRuae9XCpb/j5bDCbPPMOBfCWhnl/7EDJz0jEMCi/RhccCE8r1+Q==}
     engines: {node: '>=6.9.0'}
+
+  '@babylonjs/core@8.38.0':
+    resolution: {integrity: sha512-c2HnAbp21m9RHdkuand3iCQwfPsbI+srPNSgnzwplCicqlRDjvD0GkuJDE+z4yHlk+4DAZmhbs69meEP3xO/UQ==}
+
+  '@babylonjs/loaders@8.38.0':
+    resolution: {integrity: sha512-5h7ByG9IgCNBpUQJIPhqUsMIW1Z9wmBtoWc8uvT0JBMhMadmbElUSqRM7+Imz04wTjvX8bsCyXv7EWmJi0AEnw==}
+    peerDependencies:
+      '@babylonjs/core': ^8.0.0
+      babylonjs-gltf2interface: ^8.0.0
 
   '@dyad-sh/nextjs-webpack-component-tagger@0.8.0':
     resolution: {integrity: sha512-gWG2jdC9+f2fzlxBH4jrUunHObTgfNR1a6YZv9xHuTSC+IQmEtNKIYO220LViQv/Enjnr6xWdRHLcoaAxSZXgg==}
@@ -1208,6 +1223,9 @@ packages:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
     engines: {node: '>=10'}
 
+  babylonjs-gltf2interface@8.38.0:
+    resolution: {integrity: sha512-eA98MXtjgqqwoK/9yFVOcklViiZr/GQphsvkz1FTqZ5il/V0n7swCjpMyWsHswxnlMC/A8Ec6k8dzB++FXcmNg==}
+
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
@@ -2115,6 +2133,13 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
+
+  '@babylonjs/core@8.38.0': {}
+
+  '@babylonjs/loaders@8.38.0(@babylonjs/core@8.38.0)(babylonjs-gltf2interface@8.38.0)':
+    dependencies:
+      '@babylonjs/core': 8.38.0
+      babylonjs-gltf2interface: 8.38.0
 
   '@dyad-sh/nextjs-webpack-component-tagger@0.8.0(webpack@5.99.9)':
     dependencies:
@@ -3134,6 +3159,8 @@ snapshots:
   aria-hidden@1.2.6:
     dependencies:
       tslib: 2.8.1
+
+  babylonjs-gltf2interface@8.38.0: {}
 
   balanced-match@1.0.2: {}
 
