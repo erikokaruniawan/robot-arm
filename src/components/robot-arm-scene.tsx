@@ -7,13 +7,16 @@ interface RobotArmSceneProps {
   baseRotation: number;
   shoulderRotation: number;
   elbowRotation: number;
+  gripperPosition: number;
 }
 
-const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRotation, elbowRotation }) => {
+const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRotation, elbowRotation, gripperPosition }) => {
   const reactCanvas = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<Mesh | null>(null);
   const shoulderJointRef = useRef<Mesh | null>(null);
   const elbowJointRef = useRef<Mesh | null>(null);
+  const gripperFinger1Ref = useRef<Mesh | null>(null);
+  const gripperFinger2Ref = useRef<Mesh | null>(null);
 
   useEffect(() => {
     const { current: canvas } = reactCanvas;
@@ -75,13 +78,13 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     // Gripper (Pincers)
     const gripperFinger1 = MeshBuilder.CreateBox("finger1", { width: 0.1, height: 0.6, depth: 0.1 }, scene);
     gripperFinger1.parent = wristJoint;
-    gripperFinger1.position.x = -0.2;
     gripperFinger1.position.y = 0.3;
+    gripperFinger1Ref.current = gripperFinger1;
 
     const gripperFinger2 = MeshBuilder.CreateBox("finger2", { width: 0.1, height: 0.6, depth: 0.1 }, scene);
     gripperFinger2.parent = wristJoint;
-    gripperFinger2.position.x = 0.2;
     gripperFinger2.position.y = 0.3;
+    gripperFinger2Ref.current = gripperFinger2;
 
     // Apply materials
     shoulderJoint.material = jointMaterial;
@@ -119,7 +122,15 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     if (elbowJointRef.current) {
       elbowJointRef.current.rotation.z = elbowRotation * (Math.PI / 180);
     }
-  }, [baseRotation, shoulderRotation, elbowRotation]);
+    if (gripperFinger1Ref.current && gripperFinger2Ref.current) {
+      // Map gripperPosition (0-100) to a distance (e.g., 0.1 to 0.3)
+      const minGap = 0.1;
+      const maxGap = 0.3;
+      const gap = minGap + (gripperPosition / 100) * (maxGap - minGap);
+      gripperFinger1Ref.current.position.x = -gap;
+      gripperFinger2Ref.current.position.x = gap;
+    }
+  }, [baseRotation, shoulderRotation, elbowRotation, gripperPosition]);
 
   return <canvas ref={reactCanvas} className="w-full h-full outline-none" />;
 };

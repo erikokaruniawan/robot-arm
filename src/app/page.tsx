@@ -12,6 +12,7 @@ export default function Home() {
   const [baseRotation, setBaseRotation] = useState(0);
   const [shoulderRotation, setShoulderRotation] = useState(-45);
   const [elbowRotation, setElbowRotation] = useState(45);
+  const [gripperPosition, setGripperPosition] = useState(50); // 0: closed, 100: open
 
   return (
     <div className="relative flex flex-col h-screen font-[family-name:var(--font-geist-sans)]">
@@ -24,6 +25,7 @@ export default function Home() {
             baseRotation={baseRotation}
             shoulderRotation={shoulderRotation}
             elbowRotation={elbowRotation}
+            gripperPosition={gripperPosition}
           />
         </div>
         <div className="md:col-span-1 bg-background border-l p-4 md:p-6 flex flex-col justify-center">
@@ -72,6 +74,20 @@ export default function Home() {
                   step={1}
                   value={[elbowRotation]}
                   onValueChange={(value) => setElbowRotation(value[0])}
+                />
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="gripper-position">Gripper</Label>
+                  <span className="text-sm text-muted-foreground">{gripperPosition}%</span>
+                </div>
+                <Slider
+                  id="gripper-position"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={[gripperPosition]}
+                  onValueChange={(value) => setGripperPosition(value[0])}
                 />
               </div>
             </CardContent>
