@@ -12,8 +12,8 @@ interface RobotArmSceneProps {
 const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRotation, elbowRotation }) => {
   const reactCanvas = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<Mesh | null>(null);
-  const upperArmRef = useRef<Mesh | null>(null);
-  const forearmRef = useRef<Mesh | null>(null);
+  const shoulderJointRef = useRef<Mesh | null>(null);
+  const elbowJointRef = useRef<Mesh | null>(null);
 
   useEffect(() => {
     const { current: canvas } = reactCanvas;
@@ -49,23 +49,23 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     const shoulderJoint = MeshBuilder.CreateSphere("shoulder", { diameter: 0.8 }, scene);
     shoulderJoint.parent = base;
     shoulderJoint.position.y = 0.5;
+    shoulderJointRef.current = shoulderJoint;
 
     // Upper Arm
     const upperArm = MeshBuilder.CreateCylinder("upperArm", { height: 2.5, diameter: 0.5 }, scene);
     upperArm.parent = shoulderJoint;
     upperArm.position.y = 1.25;
-    upperArmRef.current = upperArm;
 
     // Elbow Joint
     const elbowJoint = MeshBuilder.CreateSphere("elbow", { diameter: 0.7 }, scene);
     elbowJoint.parent = upperArm;
     elbowJoint.position.y = 1.25;
+    elbowJointRef.current = elbowJoint;
 
     // Forearm
     const forearm = MeshBuilder.CreateCylinder("forearm", { height: 2, diameter: 0.4 }, scene);
     forearm.parent = elbowJoint;
     forearm.position.y = 1;
-    forearmRef.current = forearm;
 
     // Apply materials
     shoulderJoint.material = jointMaterial;
@@ -94,13 +94,11 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     if (baseRef.current) {
       baseRef.current.rotation.y = baseRotation * (Math.PI / 180);
     }
-    if (upperArmRef.current) {
-      // Rotating around Z-axis for up/down motion
-      upperArmRef.current.rotation.z = shoulderRotation * (Math.PI / 180);
+    if (shoulderJointRef.current) {
+      shoulderJointRef.current.rotation.z = shoulderRotation * (Math.PI / 180);
     }
-    if (forearmRef.current) {
-      // Rotating around Z-axis for elbow bend
-      forearmRef.current.rotation.z = elbowRotation * (Math.PI / 180);
+    if (elbowJointRef.current) {
+      elbowJointRef.current.rotation.z = elbowRotation * (Math.PI / 180);
     }
   }, [baseRotation, shoulderRotation, elbowRotation]);
 
