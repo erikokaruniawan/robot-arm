@@ -67,12 +67,31 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     forearm.parent = elbowJoint;
     forearm.position.y = 1;
 
+    // Wrist Joint (Hand)
+    const wristJoint = MeshBuilder.CreateSphere("wrist", { diameter: 0.5 }, scene);
+    wristJoint.parent = forearm;
+    wristJoint.position.y = 1; // Position at the end of the forearm
+
+    // Gripper (Pincers)
+    const gripperFinger1 = MeshBuilder.CreateBox("finger1", { width: 0.1, height: 0.6, depth: 0.1 }, scene);
+    gripperFinger1.parent = wristJoint;
+    gripperFinger1.position.x = -0.2;
+    gripperFinger1.position.y = 0.3;
+
+    const gripperFinger2 = MeshBuilder.CreateBox("finger2", { width: 0.1, height: 0.6, depth: 0.1 }, scene);
+    gripperFinger2.parent = wristJoint;
+    gripperFinger2.position.x = 0.2;
+    gripperFinger2.position.y = 0.3;
+
     // Apply materials
     shoulderJoint.material = jointMaterial;
     elbowJoint.material = jointMaterial;
+    wristJoint.material = jointMaterial;
     base.material = armMaterial;
     upperArm.material = armMaterial;
     forearm.material = armMaterial;
+    gripperFinger1.material = armMaterial;
+    gripperFinger2.material = armMaterial;
 
     engine.runRenderLoop(() => {
       scene.render();
