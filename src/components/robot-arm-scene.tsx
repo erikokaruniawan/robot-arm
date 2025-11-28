@@ -10,7 +10,10 @@ import {
   MeshBuilder, 
   Color3, 
   StandardMaterial, 
-  Mesh
+  Mesh,
+  PointerDragBehavior,
+  PointerEventTypes,
+  AbstractMesh
 } from '@babylonjs/core';
 
 interface RobotArmSceneProps {
@@ -18,13 +21,19 @@ interface RobotArmSceneProps {
   shoulderRotation: number;
   elbowRotation: number;
   gripperPosition: number;
+  onBaseRotationChange: (value: number) => void;
+  onShoulderRotationChange: (value: number) => void;
+  onElbowRotationChange: (value: number) => void;
 }
 
 const RobotArmScene: React.FC<RobotArmSceneProps> = ({ 
   baseRotation, 
   shoulderRotation, 
   elbowRotation, 
-  gripperPosition 
+  gripperPosition,
+  onBaseRotationChange,
+  onShoulderRotationChange,
+  onElbowRotationChange
 }) => {
   const reactCanvas = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<Mesh | null>(null);
@@ -101,6 +110,72 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
     gripperFinger1.material = armMaterial;
     gripperFinger2.material = armMaterial;
 
+    // --- Interactivity ---
+
+    // Shoulder and Base Rotation
+    const shoulderDragBehavior = new PointerDragBehavior();
+    let startBaseRotation = 0;
+    let startShoulderRotation = 0;
+    let startPointerX = 0;
+    let startPointerY = 0;
+    shoulderDragBehavior.onDragStartObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      startBaseRotation = baseRotation;
+      startShoulderRotation = shoulderRotation;
+      startPointerX = event.pointerInfo.event.clientX;
+      startPointerY = event.pointerInfo.event.clientY;
+    });
+    shoulderDragBehavior.onDragObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      const deltaX = event.pointerInfo.event.clientX - startPointerX;
+      const deltaY = event.pointerInfo.event.clientY - startPointerY;
+      const sensitivity = 0.5;
+
+      // Base rotation from horizontal drag
+      let newBaseRotation = startBaseRotation + deltaX * sensitivity;
+      newBaseRotation = Math.max(-180, Math.min(180, newBaseRotation));
+      onBaseRotationChange(newBaseRotation);
+
+      // Shoulder rotation from vertical drag
+      let newShoulderRotation = startShoulderRotation - deltaY * sensitivity;
+      newShoulderRotation = Math.max(-90, Math.min(90, newShoulderRotation));
+      onShoulderRotationChange(newShoulderRotation);
+    });
+    shoulderJoint.addBehavior(shoulderDragBehavior);
+
+    // Elbow Rotation
+    const elbowDragBehavior = new PointerDragBehavior();
+    let startElbowRotation = 0;
+    let startElbowPointerY = 0;
+    elbowDragBehavior.onDragStartObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      startElbowRotation = elbowRotation;
+      startElbowPointerY = event.pointerInfo.event.clientY;
+    });
+    elbowDragBehavior.onDragObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      const deltaY = event.pointerInfo.event.clientY - startElbowPointerY;
+      const sensitivity = 0.5;
+      let newRotation = startElbowRotation - deltaY * sensitivity;
+      newRotation = Math.max(0, Math.min(145, newRotation));
+      onElbowRotationChange(newRotation);
+    });
+    elbowJoint.addBehavior(elbowDragBehavior);
+
+    // Cursor feedback
+    const interactiveMeshes: AbstractMesh[] = [shoulderJoint, elbowJoint];
+    scene.onPointerObservable.add((pointerInfo) => {
+      if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
+        const pickResult = scene.pick(scene.pointerX, scene.pointerY, (mesh) => interactiveMeshes.includes(mesh));
+        canvas.style.cursor = (pickResult && pickResult.hit) ? "grab" : "default";
+      }
+    });
+    
+    [shoulderDragBehavior, elbowDragBehavior].forEach(behavior => {
+        behavior.onDragStartObservable.add(() => canvas.style.cursor = "grabbing");
+        behavior.onDragEndObservable.add(() => canvas.style.cursor = "grab");
+    });
+
     engine.runRenderLoop(() => {
       scene.render();
     });
@@ -112,7 +187,7 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
       window.removeEventListener('resize', handleResize);
       engine.dispose();
     };
-  }, []);
+  }, [onBaseRotationChange, onShoulderRotationChange, onElbowRotationChange, baseRotation, shoulderRotation, elbowRotation]);
 
   useEffect(() => {
     if (baseRef.current) {
