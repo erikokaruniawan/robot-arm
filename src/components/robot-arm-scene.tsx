@@ -112,34 +112,36 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
 
     // --- Interactivity ---
 
-    // Base Rotation
-    const baseDragBehavior = new PointerDragBehavior();
-    baseDragBehavior.onDragObservable.add((event) => {
-      const angle = Math.atan2(event.dragPlanePoint.z - base.absolutePosition.z, event.dragPlanePoint.x - base.absolutePosition.x);
-      let degrees = angle * (180 / Math.PI);
-      degrees = Math.max(-180, Math.min(180, degrees));
-      onBaseRotationChange(degrees);
-    });
-    base.addBehavior(baseDragBehavior);
-
-    // Shoulder Rotation
+    // Shoulder and Base Rotation
     const shoulderDragBehavior = new PointerDragBehavior();
+    let startBaseRotation = 0;
     let startShoulderRotation = 0;
+    let startPointerX = 0;
     let startPointerY = 0;
     shoulderDragBehavior.onDragStartObservable.add((event) => {
       if (!event.pointerInfo) return;
+      startBaseRotation = baseRotation;
       startShoulderRotation = shoulderRotation;
+      startPointerX = event.pointerInfo.event.clientX;
       startPointerY = event.pointerInfo.event.clientY;
     });
     shoulderDragBehavior.onDragObservable.add((event) => {
       if (!event.pointerInfo) return;
+      const deltaX = event.pointerInfo.event.clientX - startPointerX;
       const deltaY = event.pointerInfo.event.clientY - startPointerY;
       const sensitivity = 0.5;
-      let newRotation = startShoulderRotation - deltaY * sensitivity;
-      newRotation = Math.max(-90, Math.min(90, newRotation));
-      onShoulderRotationChange(newRotation);
+
+      // Base rotation from horizontal drag
+      let newBaseRotation = startBaseRotation + deltaX * sensitivity;
+      newBaseRotation = Math.max(-180, Math.min(180, newBaseRotation));
+      onBaseRotationChange(newBaseRotation);
+
+      // Shoulder rotation from vertical drag
+      let newShoulderRotation = startShoulderRotation - deltaY * sensitivity;
+      newShoulderRotation = Math.max(-90, Math.min(90, newShoulderRotation));
+      onShoulderRotationChange(newShoulderRotation);
     });
-    upperArm.addBehavior(shoulderDragBehavior);
+    shoulderJoint.addBehavior(shoulderDragBehavior);
 
     // Elbow Rotation
     const elbowDragBehavior = new PointerDragBehavior();
@@ -158,10 +160,10 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
       newRotation = Math.max(0, Math.min(145, newRotation));
       onElbowRotationChange(newRotation);
     });
-    forearm.addBehavior(elbowDragBehavior);
+    elbowJoint.addBehavior(elbowDragBehavior);
 
     // Cursor feedback
-    const interactiveMeshes: AbstractMesh[] = [base, upperArm, forearm];
+    const interactiveMeshes: AbstractMesh[] = [shoulderJoint, elbowJoint];
     scene.onPointerObservable.add((pointerInfo) => {
       if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
         const pickResult = scene.pick(scene.pointerX, scene.pointerY, (mesh) => interactiveMeshes.includes(mesh));
@@ -169,7 +171,7 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
       }
     });
     
-    [baseDragBehavior, shoulderDragBehavior, elbowDragBehavior].forEach(behavior => {
+    [shoulderDragBehavior, elbowDragBehavior].forEach(behavior => {
         behavior.onDragStartObservable.add(() => canvas.style.cursor = "grabbing");
         behavior.onDragEndObservable.add(() => canvas.style.cursor = "grab");
     });
@@ -185,7 +187,7 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
       window.removeEventListener('resize', handleResize);
       engine.dispose();
     };
-  }, [onBaseRotationChange, onShoulderRotationChange, onElbowRotationChange, shoulderRotation, elbowRotation]);
+  }, [onBaseRotationChange, onShoulderRotationChange, onElbowRotationChange, baseRotation, shoulderRotation, elbowRotation]);
 
   useEffect(() => {
     if (baseRef.current) {
