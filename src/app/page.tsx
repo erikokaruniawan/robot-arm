@@ -32,10 +32,6 @@ export default function Home() {
             shoulderRotation={shoulderRotation}
             elbowRotation={elbowRotation}
             gripperPosition={gripperPosition}
-            onBaseRotationChange={setBaseRotation}
-            onShoulderRotationChange={setShoulderRotation}
-            onElbowRotationChange={setElbowRotation}
-            onGripperPositionChange={setGripperPosition}
           />
         </div>
         <div className="md:col-span-1 bg-background border-l p-4 md:p-6 flex flex-col justify-center">

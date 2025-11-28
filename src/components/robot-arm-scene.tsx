@@ -10,10 +10,7 @@ import {
   MeshBuilder, 
   Color3, 
   StandardMaterial, 
-  Mesh,
-  PointerDragBehavior,
-  PointerEventTypes,
-  AbstractMesh
+  Mesh
 } from '@babylonjs/core';
 
 interface RobotArmSceneProps {
@@ -21,27 +18,18 @@ interface RobotArmSceneProps {
   shoulderRotation: number;
   elbowRotation: number;
   gripperPosition: number;
-  onBaseRotationChange: (value: number) => void;
-  onShoulderRotationChange: (value: number) => void;
-  onElbowRotationChange: (value: number) => void;
-  onGripperPositionChange: (value: number) => void;
 }
 
 const RobotArmScene: React.FC<RobotArmSceneProps> = ({ 
   baseRotation, 
   shoulderRotation, 
   elbowRotation, 
-  gripperPosition,
-  onBaseRotationChange,
-  onShoulderRotationChange,
-  onElbowRotationChange,
-  onGripperPositionChange
+  gripperPosition 
 }) => {
   const reactCanvas = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<Mesh | null>(null);
   const shoulderJointRef = useRef<Mesh | null>(null);
   const elbowJointRef = useRef<Mesh | null>(null);
-  const wristJointRef = useRef<Mesh | null>(null);
   const gripperFinger1Ref = useRef<Mesh | null>(null);
   const gripperFinger2Ref = useRef<Mesh | null>(null);
 
@@ -93,7 +81,6 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
     wristJoint.parent = forearm;
     wristJoint.position.y = 1;
     wristJoint.rotation.y = Math.PI / 2;
-    wristJointRef.current = wristJoint;
 
     const gripperFinger1 = MeshBuilder.CreateBox("finger1", { width: 0.1, height: 0.6, depth: 0.1 }, scene);
     gripperFinger1.parent = wristJoint;
@@ -114,59 +101,6 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
     gripperFinger1.material = armMaterial;
     gripperFinger2.material = armMaterial;
 
-    // --- Interactivity ---
-
-    const sensitivity = 0.5;
-
-    // Shoulder and Base Rotation
-    const shoulderDragBehavior = new PointerDragBehavior();
-    shoulderDragBehavior.onDragStartObservable.add((event) => {
-      // No need to store start values, we'll use the current props
-    });
-    shoulderDragBehavior.onDragObservable.add((event) => {
-      let newBaseRotation = baseRotation + event.delta.x * sensitivity * 5;
-      newBaseRotation = Math.max(-180, Math.min(180, newBaseRotation));
-      onBaseRotationChange(newBaseRotation);
-
-      let newShoulderRotation = shoulderRotation - event.delta.y * sensitivity * 5;
-      newShoulderRotation = Math.max(-90, Math.min(90, newShoulderRotation));
-      onShoulderRotationChange(newShoulderRotation);
-    });
-    shoulderJoint.addBehavior(shoulderDragBehavior);
-
-    // Elbow Rotation
-    const elbowDragBehavior = new PointerDragBehavior();
-    elbowDragBehavior.onDragObservable.add((event) => {
-      let newRotation = elbowRotation - event.delta.y * sensitivity * 5;
-      newRotation = Math.max(0, Math.min(145, newRotation));
-      onElbowRotationChange(newRotation);
-    });
-    elbowJoint.addBehavior(elbowDragBehavior);
-
-    // Gripper Control
-    const gripperDragBehavior = new PointerDragBehavior();
-    gripperDragBehavior.onDragObservable.add((event) => {
-        let newPosition = gripperPosition + event.delta.x * sensitivity * 10;
-        newPosition = Math.max(0, Math.min(100, newPosition));
-        onGripperPositionChange(newPosition);
-    });
-    wristJoint.addBehavior(gripperDragBehavior);
-
-
-    // Cursor feedback
-    const interactiveMeshes: AbstractMesh[] = [shoulderJoint, elbowJoint, wristJoint];
-    scene.onPointerObservable.add((pointerInfo) => {
-      if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
-        const pickResult = scene.pick(scene.pointerX, scene.pointerY, (mesh) => interactiveMeshes.includes(mesh));
-        canvas.style.cursor = (pickResult && pickResult.hit) ? "grab" : "default";
-      }
-    });
-    
-    [shoulderDragBehavior, elbowDragBehavior, gripperDragBehavior].forEach(behavior => {
-        behavior.onDragStartObservable.add(() => canvas.style.cursor = "grabbing");
-        behavior.onDragEndObservable.add(() => canvas.style.cursor = "grab");
-    });
-
     engine.runRenderLoop(() => {
       scene.render();
     });
@@ -178,7 +112,7 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({
       window.removeEventListener('resize', handleResize);
       engine.dispose();
     };
-  }, [onBaseRotationChange, onShoulderRotationChange, onElbowRotationChange, onGripperPositionChange, baseRotation, shoulderRotation, elbowRotation, gripperPosition]);
+  }, []);
 
   useEffect(() => {
     if (baseRef.current) {
