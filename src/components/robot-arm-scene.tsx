@@ -1,16 +1,40 @@
 "use client"
 
 import React, { useEffect, useRef } from 'react';
-import { Engine, Scene, FreeCamera, HemisphericLight, Vector3, MeshBuilder, Color3, StandardMaterial, Mesh } from '@babylonjs/core';
+import { 
+  Engine, 
+  Scene, 
+  FreeCamera, 
+  HemisphericLight, 
+  Vector3, 
+  MeshBuilder, 
+  Color3, 
+  StandardMaterial, 
+  Mesh,
+  PointerDragBehavior,
+  PointerEventTypes,
+  AbstractMesh
+} from '@babylonjs/core';
 
 interface RobotArmSceneProps {
   baseRotation: number;
   shoulderRotation: number;
   elbowRotation: number;
   gripperPosition: number;
+  onBaseRotationChange: (value: number) => void;
+  onShoulderRotationChange: (value: number) => void;
+  onElbowRotationChange: (value: number) => void;
 }
 
-const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRotation, elbowRotation, gripperPosition }) => {
+const RobotArmScene: React.FC<RobotArmSceneProps> = ({ 
+  baseRotation, 
+  shoulderRotation, 
+  elbowRotation, 
+  gripperPosition,
+  onBaseRotationChange,
+  onShoulderRotationChange,
+  onElbowRotationChange
+}) => {
   const reactCanvas = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<Mesh | null>(null);
   const shoulderJointRef = useRef<Mesh | null>(null);
@@ -32,51 +56,41 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     const light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    // Ground
     MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
 
-    // Materials
     const jointMaterial = new StandardMaterial("jointMat", scene);
-    jointMaterial.diffuseColor = new Color3(0.8, 0.2, 0.2); // Red
+    jointMaterial.diffuseColor = new Color3(0.8, 0.2, 0.2);
 
     const armMaterial = new StandardMaterial("armMat", scene);
-    armMaterial.diffuseColor = new Color3(0.7, 0.7, 0.7); // Gray
+    armMaterial.diffuseColor = new Color3(0.7, 0.7, 0.7);
 
-    // Robot Arm Parts
-    // Base
     const base = MeshBuilder.CreateCylinder("base", { height: 0.5, diameter: 2 }, scene);
     base.position.y = 0.25;
     baseRef.current = base;
 
-    // Shoulder Joint
     const shoulderJoint = MeshBuilder.CreateSphere("shoulder", { diameter: 0.8 }, scene);
     shoulderJoint.parent = base;
     shoulderJoint.position.y = 0.5;
     shoulderJointRef.current = shoulderJoint;
 
-    // Upper Arm
     const upperArm = MeshBuilder.CreateCylinder("upperArm", { height: 2.5, diameter: 0.5 }, scene);
     upperArm.parent = shoulderJoint;
     upperArm.position.y = 1.25;
 
-    // Elbow Joint
     const elbowJoint = MeshBuilder.CreateSphere("elbow", { diameter: 0.7 }, scene);
     elbowJoint.parent = upperArm;
     elbowJoint.position.y = 1.25;
     elbowJointRef.current = elbowJoint;
 
-    // Forearm
     const forearm = MeshBuilder.CreateCylinder("forearm", { height: 2, diameter: 0.4 }, scene);
     forearm.parent = elbowJoint;
     forearm.position.y = 1;
 
-    // Wrist Joint (Hand)
     const wristJoint = MeshBuilder.CreateSphere("wrist", { diameter: 0.5 }, scene);
     wristJoint.parent = forearm;
-    wristJoint.position.y = 1; // Position at the end of the forearm
-    wristJoint.rotation.y = Math.PI / 2; // Rotate 90 degrees for horizontal grip
+    wristJoint.position.y = 1;
+    wristJoint.rotation.y = Math.PI / 2;
 
-    // Gripper (Pincers)
     const gripperFinger1 = MeshBuilder.CreateBox("finger1", { width: 0.1, height: 0.6, depth: 0.1 }, scene);
     gripperFinger1.parent = wristJoint;
     gripperFinger1.position.y = 0.3;
@@ -87,7 +101,6 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     gripperFinger2.position.y = 0.3;
     gripperFinger2Ref.current = gripperFinger2;
 
-    // Apply materials
     shoulderJoint.material = jointMaterial;
     elbowJoint.material = jointMaterial;
     wristJoint.material = jointMaterial;
@@ -97,21 +110,82 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
     gripperFinger1.material = armMaterial;
     gripperFinger2.material = armMaterial;
 
+    // --- Interactivity ---
+
+    // Base Rotation
+    const baseDragBehavior = new PointerDragBehavior();
+    baseDragBehavior.onDragObservable.add((event) => {
+      const angle = Math.atan2(event.dragPlanePoint.z - base.absolutePosition.z, event.dragPlanePoint.x - base.absolutePosition.x);
+      let degrees = angle * (180 / Math.PI);
+      degrees = Math.max(-180, Math.min(180, degrees));
+      onBaseRotationChange(degrees);
+    });
+    base.addBehavior(baseDragBehavior);
+
+    // Shoulder Rotation
+    const shoulderDragBehavior = new PointerDragBehavior();
+    let startShoulderRotation = 0;
+    let startPointerY = 0;
+    shoulderDragBehavior.onDragStartObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      startShoulderRotation = shoulderRotation;
+      startPointerY = event.pointerInfo.event.clientY;
+    });
+    shoulderDragBehavior.onDragObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      const deltaY = event.pointerInfo.event.clientY - startPointerY;
+      const sensitivity = 0.5;
+      let newRotation = startShoulderRotation - deltaY * sensitivity;
+      newRotation = Math.max(-90, Math.min(90, newRotation));
+      onShoulderRotationChange(newRotation);
+    });
+    upperArm.addBehavior(shoulderDragBehavior);
+
+    // Elbow Rotation
+    const elbowDragBehavior = new PointerDragBehavior();
+    let startElbowRotation = 0;
+    let startElbowPointerY = 0;
+    elbowDragBehavior.onDragStartObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      startElbowRotation = elbowRotation;
+      startElbowPointerY = event.pointerInfo.event.clientY;
+    });
+    elbowDragBehavior.onDragObservable.add((event) => {
+      if (!event.pointerInfo) return;
+      const deltaY = event.pointerInfo.event.clientY - startElbowPointerY;
+      const sensitivity = 0.5;
+      let newRotation = startElbowRotation - deltaY * sensitivity;
+      newRotation = Math.max(0, Math.min(145, newRotation));
+      onElbowRotationChange(newRotation);
+    });
+    forearm.addBehavior(elbowDragBehavior);
+
+    // Cursor feedback
+    const interactiveMeshes: AbstractMesh[] = [base, upperArm, forearm];
+    scene.onPointerObservable.add((pointerInfo) => {
+      if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
+        const pickResult = scene.pick(scene.pointerX, scene.pointerY, (mesh) => interactiveMeshes.includes(mesh));
+        canvas.style.cursor = (pickResult && pickResult.hit) ? "grab" : "default";
+      }
+    });
+    
+    [baseDragBehavior, shoulderDragBehavior, elbowDragBehavior].forEach(behavior => {
+        behavior.onDragStartObservable.add(() => canvas.style.cursor = "grabbing");
+        behavior.onDragEndObservable.add(() => canvas.style.cursor = "grab");
+    });
+
     engine.runRenderLoop(() => {
       scene.render();
     });
 
-    const handleResize = () => {
-      engine.resize();
-    };
-
+    const handleResize = () => engine.resize();
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       engine.dispose();
     };
-  }, []);
+  }, [onBaseRotationChange, onShoulderRotationChange, onElbowRotationChange, shoulderRotation, elbowRotation]);
 
   useEffect(() => {
     if (baseRef.current) {
@@ -124,7 +198,6 @@ const RobotArmScene: React.FC<RobotArmSceneProps> = ({ baseRotation, shoulderRot
       elbowJointRef.current.rotation.z = elbowRotation * (Math.PI / 180);
     }
     if (gripperFinger1Ref.current && gripperFinger2Ref.current) {
-      // Map gripperPosition (0-100) to a distance (e.g., 0.1 to 0.3)
       const minGap = 0.1;
       const maxGap = 0.3;
       const gap = minGap + (gripperPosition / 100) * (maxGap - minGap);

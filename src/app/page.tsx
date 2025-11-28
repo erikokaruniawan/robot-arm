@@ -26,6 +26,9 @@ export default function Home() {
             shoulderRotation={shoulderRotation}
             elbowRotation={elbowRotation}
             gripperPosition={gripperPosition}
+            onBaseRotationChange={setBaseRotation}
+            onShoulderRotationChange={setShoulderRotation}
+            onElbowRotationChange={setElbowRotation}
           />
         </div>
         <div className="md:col-span-1 bg-background border-l p-4 md:p-6 flex flex-col justify-center">
@@ -37,7 +40,7 @@ export default function Home() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="base-rotation">Base Rotation</Label>
-                  <span className="text-sm text-muted-foreground">{baseRotation}°</span>
+                  <span className="text-sm text-muted-foreground">{baseRotation.toFixed(0)}°</span>
                 </div>
                 <Slider
                   id="base-rotation"
@@ -51,7 +54,7 @@ export default function Home() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="shoulder-rotation">Shoulder Angle</Label>
-                  <span className="text-sm text-muted-foreground">{shoulderRotation}°</span>
+                  <span className="text-sm text-muted-foreground">{shoulderRotation.toFixed(0)}°</span>
                 </div>
                 <Slider
                   id="shoulder-rotation"
@@ -65,7 +68,7 @@ export default function Home() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="elbow-rotation">Elbow Angle</Label>
-                  <span className="text-sm text-muted-foreground">{elbowRotation}°</span>
+                  <span className="text-sm text-muted-foreground">{elbowRotation.toFixed(0)}°</span>
                 </div>
                 <Slider
                   id="elbow-rotation"
