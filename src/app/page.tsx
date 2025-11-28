@@ -1,12 +1,18 @@
 "use client"
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import RobotArmScene from '@/components/robot-arm-scene';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const RobotArmScene = dynamic(() => import('@/components/robot-arm-scene'), {
+  ssr: false,
+  loading: () => <Skeleton className="w-full h-full" />,
+});
 
 export default function Home() {
   const [baseRotation, setBaseRotation] = useState(0);
